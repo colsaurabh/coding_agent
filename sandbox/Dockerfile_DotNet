@@ -1,0 +1,15 @@
+# Use the official Microsoft .NET SDK image as our build runner
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS development
+
+# Install standard utilities and MariaDB client tools
+RUN apt-get update && apt-get install -y \
+    mariadb-client \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establish a consistent workspace inside the container
+WORKDIR /workspace
+
+# Keep the container running in an idle loop
+CMD ["tail", "-f", "/dev/null"]

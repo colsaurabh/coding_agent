@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # The isolated environment where code execution happens
+  agent_workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent_sandbox
+    volumes:
+      # Mounts your target repository folder right into /workspace dynamically
+      - /Users/saurabhgupta/Saurabh/L&T Finance/Coding/SamplePaymentService/DotNet/PaymentService:/workspace
+    environment:
+      - DB_CONNECTION_STRING=Server=mariadb_test;Database=poc_db;Uid=root;Pwd=agent_secret_pass;
+      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+    depends_on:
+      - mariadb_test
+
+  # The local database dependency specified for your ecosystem
+  mariadb_test:
+    image: mariadb:11.2
+    container_name: mariadb_agent_sandbox
+    ports:
+      - "3307:3306" # Exposed locally to let you inspect tables using DBeaver/DataGrip
+    environment:
+      MYSQL_ROOT_PASSWORD: agent_secret_pass
+      MYSQL_DATABASE: poc_db
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+volumes:
+  mariadb_data:

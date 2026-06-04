@@ -1,0 +1,11 @@
+FROM python:3.11-slim AS development
+
+RUN apt-get update && apt-get install -y mariadb-client gcc libmariadb-dev git && rm -rf /var/lib/apt/lists/*
+
+# Standardize commands via scripts
+# Note: For Python, "build" checks code syntax via compilation validation
+RUN echo '#!/bin/bash\nif [ -f requirements.txt ]; then pip install -r requirements.txt; fi\npython -m py_compile **/*.py' > /usr/local/bin/agent-build && chmod +x /usr/local/bin/agent-build
+RUN echo '#!/bin/bash\npytest' > /usr/local/bin/agent-test && chmod +x /usr/local/bin/agent-test
+
+WORKDIR /workspace
+CMD ["tail", "-f", "/dev/null"]
