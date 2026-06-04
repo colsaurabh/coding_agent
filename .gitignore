@@ -1,0 +1,4 @@
+.DS_Store
+.chroma_code_db/
+storage/
+venv/
