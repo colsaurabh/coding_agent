@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS development
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS development
 
 # Add openssh-client to the installation layer
 RUN apt-get update && apt-get install -y \

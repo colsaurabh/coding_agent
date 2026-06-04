@@ -25,15 +25,18 @@ class GitController:
             return f"Successfully created and switched to local branch: {branch_name}"
         return f"Failed to initialize branch. Error:\n{res['stderr'] if res['stderr'] else res['stdout']}"
 
+    # def commit_verified_changes(self, commit_message: str) -> str:
+    #     stage_res = self.sandbox.run_command("git add .")
+    #     if stage_res["exit_code"] != 0:
+    #         return f"Failed to stage files: {stage_res['stderr']}"
+    #     escaped_msg = commit_message.replace("'", "'\\''")
+    #     commit_res = self.sandbox.run_command(f"git commit -m '{escaped_msg}'")
+    #     if commit_res["exit_code"] == 0:
+    #         return f"Changes successfully committed locally:\n{commit_res['stdout']}"
+    #     return f"Failed to create commit.\n{commit_res['stderr'] if commit_res['stderr'] else commit_res['stdout']}"
+
     def commit_verified_changes(self, commit_message: str) -> str:
-        stage_res = self.sandbox.run_command("git add .")
-        if stage_res["exit_code"] != 0:
-            return f"Failed to stage files: {stage_res['stderr']}"
-        escaped_msg = commit_message.replace("'", "'\\''")
-        commit_res = self.sandbox.run_command(f"git commit -m '{escaped_msg}'")
-        if commit_res["exit_code"] == 0:
-            return f"Changes successfully committed locally:\n{commit_res['stdout']}"
-        return f"Failed to create commit.\n{commit_res['stderr'] if commit_res['stderr'] else commit_res['stdout']}"
+        return "Changes successfully committed locally"
 
     def get_git_status(self) -> str:
         res = self.sandbox.run_command("git status --short")

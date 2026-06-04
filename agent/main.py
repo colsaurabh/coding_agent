@@ -102,6 +102,9 @@ def solve_issue(issue_description: str):
         response = chat.send_message(current_prompt)
         # Check if the model wants to run a tool
         if response.function_calls:
+            # Create a list to aggregate outputs from this turn
+            turn_outputs = []
+            
             for call in response.function_calls:
                 # Dynamically look up the matching Python tool function
                 tool_func = next((f for f in agent_tools if f.__name__ == call.name), None)
@@ -115,14 +118,15 @@ def solve_issue(issue_description: str):
                     
                     try:
                         # Execute the physical backend/Docker command
-                        print("⏳ Executing command inside the sandbox container... Please wait...")
                         tool_output = tool_func(**tool_args)
                         
-                        # NEW VISIBILITY LOGS: Print exactly what happened inside the sandbox
+                        # VISIBILITY LOGS: Now this will print for EVERY tool executed
                         print(f"\n📥 [SANDBOX OUTPUT RECEIVED - {len(str(tool_output))} chars]")
                         print("--------------------------------------------------------")
-                        print(tool_output) # This streams the RAW build errors, test failures, or file content to your terminal
+                        print(tool_output) 
                         print("--------------------------------------------------------\n")
+                        
+                        turn_outputs.append(f"Tool '{call.name}' returned output:\n{tool_output}")
                         
                     except TypeError as e:
                         print(f"⚠️ Argument mapping error encountered: {e}. Attempting recovery...")
@@ -130,11 +134,12 @@ def solve_issue(issue_description: str):
                             tool_output = tool_func(tool_args['file_path'])
                         else:
                             tool_output = f"TypeError during tool execution: {str(e)}."
-                    
-                    # Feed the outcome back to Gemini on the next cycle
-                    current_prompt = f"Tool '{call.name}' returned output:\n{tool_output}"
+                        turn_outputs.append(f"Tool '{call.name}' returned error: {tool_output}")
                 else:
-                    current_prompt = f"Error: Tool '{call.name}' not recognized by supervisor system."
+                    turn_outputs.append(f"Error: Tool '{call.name}' not recognized by supervisor system.")
+            
+            # Combine all results from this turn into the next prompt
+            current_prompt = "\n\n".join(turn_outputs)
         else:
             print("🏁 Final Resolution:\n", response.text)
             break
@@ -146,7 +151,16 @@ if __name__ == "__main__":
     # indexer.index_repository()
 
     # solve_issue("Find the payment processing controller and verify if the currency validation logic is correct.")
+
+    # solve_issue(
+    #     "Create a dummy file named 'git_test_1.txt' containing the text 'Docker Git Pipeline Test'. "
+    #     "Initialize a feature branch, add this file, commit the change, and run the push tool to verify remote connectivity."
+    # )
+
+    # solve_issue(
+    #     "See if the code builds. If not then rectify this."
+    # )
+
     solve_issue(
-        "Create a dummy file named 'git_test_1.txt' containing the text 'Docker Git Pipeline Test'. "
-        "Initialize a feature branch, add this file, commit the change, and run the push tool to verify remote connectivity."
+        "See if there are any functional issues in the codebase that violate the business rules around payment processing. If you find any, fix them and ensure all tests pass."
     )

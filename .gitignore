@@ -2,3 +2,5 @@
 .chroma_code_db/
 storage/
 venv/
+agent/__pycache__/
+agent/tools/__pycache__/
