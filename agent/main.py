@@ -101,33 +101,6 @@ def solve_issue(issue_description: str):
     for loop_idx in range(10):
         response = chat.send_message(current_prompt)
         # Check if the model wants to run a tool
-        # if response.function_calls:
-        #     for call in response.function_calls:
-        #         # Dynamically look up the matching Python tool function
-        #         tool_func = next((f for f in agent_tools if f.__name__ == call.name), None)
-        #         if tool_func:
-        #             # Cleanly extract arguments dict from Gemini's call object
-        #             # Gemini usually passes arguments as a dictionary (e.g. {'file_path': 'Controllers/PaymentController.cs'})
-        #             tool_args = dict(call.args) if call.args else {}
-                    
-        #             print(f"⚙️ Executing tool [{call.name}] with arguments: {tool_args}")
-                    
-        #             try:
-        #                 # Unpack dictionary arguments safely into the Python function
-        #                 tool_output = tool_func(**tool_args)
-        #             except TypeError as e:
-        #                 # Fallback case: if Gemini passes parameters under a different mapping style
-        #                 print(f"⚠️ Argument mapping error encountered: {e}. Attempting recovery...")
-        #                 if len(tool_args) == 1 and 'file_path' in tool_args:
-        #                     tool_output = tool_func(tool_args['file_path'])
-        #                 else:
-        #                     tool_output = f"TypeError during tool execution: {str(e)}. Check your argument schemas."
-                    
-        #             # Feed the outcome back to Gemini on the next cycle
-        #             current_prompt = f"Tool '{call.name}' returned output:\n{tool_output}"
-        #         else:
-        #             current_prompt = f"Error: Tool '{call.name}' not recognized by supervisor system."
-        # Check if the model wants to run a tool
         if response.function_calls:
             for call in response.function_calls:
                 # Dynamically look up the matching Python tool function
