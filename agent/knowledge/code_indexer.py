@@ -32,6 +32,60 @@ def extract_methods(source_code: str, ext: str):
         re.MULTILINE
     )
 
+def extract_method_name(chunk: str):
+
+    match = re.search(
+        r'(?:public|private|protected|internal).*?([A-Za-z_][A-Za-z0-9_]*)\s*\(',
+        chunk,
+        re.DOTALL
+    )
+
+    if match:
+        return match.group(1)
+
+    return "Unknown"
+
+
+
+# ToDo: For other languages, we can implement similar logic or use language-specific parsers if available.
+def extract_csharp_method_chunks(content: str):
+
+    pattern = (
+        r'(?:public|private|protected|internal)'
+        r'(?:\s+(?:static|virtual|override|sealed|abstract))*'
+        r'(?:\s+async)?'
+        r'\s+[\w<>\[\],.?]+'
+        r'\s+[A-Za-z_][A-Za-z0-9_]*'
+        r'\s*\('
+    )
+
+    matches = list(
+        re.finditer(
+            pattern,
+            content,
+            re.MULTILINE
+        )
+    )
+
+    if not matches:
+        return [content]
+
+    chunks = []
+
+    for i, match in enumerate(matches):
+
+        start = match.start()
+
+        if i < len(matches) - 1:
+            end = matches[i + 1].start()
+        else:
+            end = len(content)
+
+        chunks.append(
+            content[start:end].strip()
+        )
+
+    return chunks
 
 # ============================================================
 # Embeddings
@@ -398,23 +452,37 @@ class CodebaseIndexer:
                         ext
                     )
 
-                    splitter = (
-                        RecursiveCharacterTextSplitter
-                        .from_language(
-                            language=
-                            extension_mappings[ext],
-                            chunk_size=1000,
-                            chunk_overlap=100
-                        )
-                    )
+                    if ext == ".cs":
 
-                    chunks = splitter.split_text(
-                        content
-                    )
+                        chunks = extract_csharp_method_chunks(
+                            content
+                        )
+                        print(f"{rel_path} -> chunks created: {len(chunks)}")
+
+                    else:
+
+                        splitter = (
+                            RecursiveCharacterTextSplitter
+                            .from_language(
+                                language=
+                                extension_mappings[ext],
+                                chunk_size=1000,
+                                chunk_overlap=100
+                            )
+                        )
+
+                        chunks = splitter.split_text(
+                            content
+                        )
+                        print(f"{rel_path} -> chunks created: {len(chunks)}")
 
                     for idx, chunk in enumerate(
                         chunks
                     ):
+
+                        method_name = extract_method_name(
+                            chunk
+                        )
 
                         documents.append(
                             Document(
@@ -428,6 +496,8 @@ class CodebaseIndexer:
                                         f"{rel_path}_{idx}",
                                     "class":
                                         metadata["class"],
+                                    "method":
+                                        method_name,
                                     "methods":
                                         metadata["methods"]
                                 }
